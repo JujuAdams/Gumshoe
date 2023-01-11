@@ -131,7 +131,7 @@ function __gumshoe_array(_directory, _extension, _result, _match_all_mask, _path
     var _i = 0;
     repeat(array_length(_directories))
     {
-        __gumshoe_array(_directories[_i], _extension, _result);
+        __gumshoe_array(_directories[_i], _extension, _result, _match_all_mask, _path_sep);
         ++_i;
     }
     
@@ -173,7 +173,7 @@ function __gumshoe_struct(_directory, _extension, _match_all_mask, _path_sep)
     var _i = 0;
     repeat(array_length(_directories))
     {
-        variable_struct_set(_result, _directories[_i], __gumshoe_struct(_directory + _directories[_i] + _path_sep, _extension));
+        variable_struct_set(_result, _directories[_i], __gumshoe_struct(_directory + _directories[_i] + _path_sep, _extension, _match_all_mask, _path_sep));
         ++_i;
     }
     

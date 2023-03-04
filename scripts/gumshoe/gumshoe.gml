@@ -33,7 +33,8 @@ On Microsoft platforms this flag does nothing as the file system is not case sen
 /// @param fileExtension
 /// @param returnStruct
 /// @param [forceLCNames] Force lowercase names on non-MSFT platforms, see comment(s) above for an explanation.
-function gumshoe()
+/// @param [structValueGenerator] when returnStruct = true, function that generates the value for the file (params: directiory, file, extension, index)
+function gumshoe(_directory, _extension, _return_struct = false, _force_lcnames = true, _generator = undefined)
 {
     //Microsoft platforms handle wildcards and patterns slightly different than others (Linux or web based).
     static _is_microsoft =
@@ -53,10 +54,9 @@ function gumshoe()
     //(see comments above for more ramblings)
     static _match_all_mask         = _is_microsoft? "*.*" :  "*";
     
-    var _directory                 = argument[0];
-    var _extension                 = argument[1];
-    var _return_struct             = argument[2];
-    var _force_lcnames             = (argument_count > 3)? argument[3] : true;
+    if (_return_struct == false && _generator != undefined) {
+        throw "Gumshoe: structValueGenerator can only be specified when returning a struct";
+    }
     
     //The JS export does not support file search at all.
     if (os_browser != browser_not_a_browser)
@@ -87,7 +87,7 @@ function gumshoe()
     if (_return_struct)
     {
         global.__gumshoe_count = 0;
-        return __gumshoe_struct(_directory, _extension, _match_all_mask, _path_separator);
+        return __gumshoe_struct(_directory, _extension, _match_all_mask, _path_separator, _generator);
     }
     else
     {
@@ -131,7 +131,7 @@ function __gumshoe_array(_directory, _extension, _result, _match_all_mask, _path
     var _i = 0;
     repeat(array_length(_directories))
     {
-        __gumshoe_array(_directories[_i], _extension, _result);
+        __gumshoe_array(_directories[_i], _extension, _result, _match_all_mask, _path_sep);
         ++_i;
     }
     
@@ -142,7 +142,8 @@ function __gumshoe_array(_directory, _extension, _result, _match_all_mask, _path
 /// @param fileExtension
 /// @param matchAllMask
 /// @param pathSeparator
-function __gumshoe_struct(_directory, _extension, _match_all_mask, _path_sep)
+/// @param structValueGenerator
+function __gumshoe_struct(_directory, _extension, _match_all_mask, _path_sep, _generator)
 {
     var _directories = [];
     var _result = {};
@@ -162,7 +163,8 @@ function __gumshoe_struct(_directory, _extension, _match_all_mask, _path_sep)
         else if ((_extension == ".*") || (filename_ext(_file) == _extension))
         {
             //Add this matching file to the output array
-            variable_struct_set(_result, _file, global.__gumshoe_count);
+            var value = _generator ? _generator(_directory, _file, _extension, global.__gumshoe_count) : global.__gumshoe_count;
+            variable_struct_set(_result, _file, value);
             ++global.__gumshoe_count;
         }
     }
@@ -173,7 +175,7 @@ function __gumshoe_struct(_directory, _extension, _match_all_mask, _path_sep)
     var _i = 0;
     repeat(array_length(_directories))
     {
-        variable_struct_set(_result, _directories[_i], __gumshoe_struct(_directory + _directories[_i] + _path_sep, _extension));
+        variable_struct_set(_result, _directories[_i], __gumshoe_struct(_directory + _directories[_i] + _path_sep, _extension, _match_all_mask, _path_sep, _generator));
         ++_i;
     }
     

@@ -1,5 +1,7 @@
 show_debug_message("array version:");
 show_debug_message(gumshoe("", "txt", false));
+show_debug_message("array version with forceForwardSlash: true:");
+show_debug_message(gumshoe("", "txt", false, , , true));
 show_debug_message("struct version:");
 show_debug_message(gumshoe("", "txt", true));
 show_debug_message("struct version with value generator:");
